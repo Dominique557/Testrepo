@@ -1,0 +1,51 @@
+import pandas as pd
+import numpy as np
+
+from olist.seller import Seller
+seller = Seller().get_training_data()
+
+#from olist.product import Product
+#product = Product().get_training_data()
+
+#from olist.product import Product
+#productagg = Product().get_product_cat
+
+α = 3157.27
+β = 978.23
+
+class OlistSellerOptimizer:
+    
+    def __init__(self, seller_data):
+        self.seller_data = seller_data
+        #self.product_data = product_data
+        #self.it_costs = it_costs
+        
+    def compute_Itcost(self, sellers_to_remove):
+        # Sort sellers by increasing profits
+        sorted_sellers = self.seller_data.sort_values(by='profits')
+
+        # Remove sellers one by one, starting from the one with the lowest profit
+        removed_sellers = sorted_sellers.head(sellers_to_remove)
+        remaining_sellers = sorted_sellers.tail(len(sorted_sellers) - sellers_to_remove)
+        #remaining_quantity = sorted_sellers.tail(len(sorted_sellers) - sellers_to_remove)
+        remaining_quantity = remaining_sellers['quantity'].sum()
+        
+        IT_costs = α * np.sqrt(len(remaining_sellers.index)) + β * np.sqrt(remaining_quantity)
+        
+        remaining_profit = sorted_sellers.profits.sum() - removed_sellers.profits.sum() 
+
+        return [IT_costs, remaining_profit]
+
+
+IT_cost_list = []
+remaining_profit_List = []
+
+IT_cost_list = [OlistSellerOptimizer(seller).compute_Itcost(i)[0] for i in range(len(seller))]
+
+remaining_profit_List = [OlistSellerOptimizer(seller).compute_Itcost(i)[1] for i in range(len(seller))]
+
+
+import matplotlib.pyplot as plt
+plt.plot(np.array(remaining_profit_List) - np.array(IT_cost_list))
+plt.plot(IT_cost_list)
+plt.plot(remaining_profit_List)
